@@ -1,19 +1,24 @@
 package tacos
 
-import lombok.extern.slf4j.Slf4j
+import mu.KotlinLogging
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
+import org.springframework.validation.Errors
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import java.util.*
+import javax.validation.Valid
 
-@Slf4j
 @Controller
 @RequestMapping("/design")
 class DesignTacoController {
 
-    @GetMapping
-    fun showDesignForm(model: Model): String {
+    private val logger = KotlinLogging.logger {}
+
+    @ModelAttribute
+    fun addIngredientsToModel(model: Model) {
         val ingredients = Arrays.asList(
                 Ingredient("FLTO", "Flour Tortilla", Ingredient.Type.WRAP),
                 Ingredient("COTO", "Corn Tortilla", Ingredient.Type.WRAP),
@@ -30,8 +35,30 @@ class DesignTacoController {
             model.addAttribute(it.toString().toLowerCase(),
                     Filter.filterByType(ingredients, it))
         }
-        model.addAttribute("design", Taco("your name", mutableListOf<Ingredient>()))
+    }
+
+    @ModelAttribute
+    fun taco(model: Model) {
+        model.addAttribute("design", Taco())
+    }
+
+    @GetMapping
+    fun showDesignForm(model: Model): String {
         return "design"
+    }
+
+    @PostMapping
+    fun processDesign(@Valid @ModelAttribute("design") design: Taco, errors: Errors): String {
+
+        logger.run { info("$design") }
+
+        if (errors.hasErrors()) {
+            return "design";
+        }
+
+        // TODO: save the taco design
+        logger.run { info("Processing design: $design") }
+        return "redirect:/orders/current"
     }
 
 }
